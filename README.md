@@ -31,3 +31,16 @@ OreEMP is a Fabric client mod that simulates ore placement from a known seed and
    ./gradlew build
    ```
 4. Output jar will be in `build/libs`.
+
+## Local validation
+
+- Build validity:
+  ```bash
+  ./gradlew build
+  ```
+- Launch validity (dev client):
+  ```bash
+  ./gradlew runClient
+  ```
+
+If `runClient` crashes in a headless environment, verify on a machine/session with a graphical display. In this container, launch reaches Minecraft/Fabric bootstrap and then fails at window/OpenGL initialization due missing display backend.
