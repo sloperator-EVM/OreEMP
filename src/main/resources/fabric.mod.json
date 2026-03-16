@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "oreemp",
+  "version": "${version}",
+  "name": "OreEMP",
+  "description": "Client ore simulation and rendering mod.",
+  "authors": ["Codex"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.oreemp.OreEmpClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric": "*",
+    "minecraft": "1.21.1"
+  }
+}
