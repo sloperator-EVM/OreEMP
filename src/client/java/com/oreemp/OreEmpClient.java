@@ -5,8 +5,10 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.debug.DebugRenderer;
@@ -20,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class OreEmpClient implements ClientModInitializer {
+    private static final double RENDER_RADIUS_SQ = 10.0 * 10.0;
     private OreSimManager manager;
 
     @Override
@@ -50,6 +53,7 @@ public class OreEmpClient implements ClientModInitializer {
         });
 
         ClientChunkEvents.CHUNK_LOAD.register((world, chunk) -> manager.onChunkLoad(chunk.getPos().x, chunk.getPos().z));
+        ClientTickEvents.END_CLIENT_TICK.register(ignored -> manager.tick());
         WorldRenderEvents.LAST.register(this::renderOres);
     }
 
@@ -77,7 +81,14 @@ public class OreEmpClient implements ClientModInitializer {
                 float g = ((ore.color() >> 8) & 255) / 255f;
                 float b = (ore.color() & 255) / 255f;
                 for (BlockPos orePos : oreEntry.getValue()) {
-                    if (client.world.getBlockState(orePos).isAir()) {
+                    if (orePos.getSquaredDistance(client.player.getX(), client.player.getY(), client.player.getZ()) > RENDER_RADIUS_SQ) {
+                        continue;
+                    }
+                    BlockState state = client.world.getBlockState(orePos);
+                    if (!state.isOf(ore.block())) {
+                        continue;
+                    }
+                    if (isExposedToAir(client.world.getBlockState(orePos.up()), client.world.getBlockState(orePos.down()), client.world.getBlockState(orePos.north()), client.world.getBlockState(orePos.south()), client.world.getBlockState(orePos.east()), client.world.getBlockState(orePos.west()))) {
                         continue;
                     }
                     Box box = new Box(orePos).offset(-camPos.x, -camPos.y, -camPos.z);
@@ -85,5 +96,9 @@ public class OreEmpClient implements ClientModInitializer {
                 }
             }
         }
+    }
+
+    private boolean isExposedToAir(BlockState up, BlockState down, BlockState north, BlockState south, BlockState east, BlockState west) {
+        return up.isAir() || down.isAir() || north.isAir() || south.isAir() || east.isAir() || west.isAir();
     }
 }
